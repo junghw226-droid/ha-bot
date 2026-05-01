@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#060608"/>
+<title>HA 선물봇</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#060608;color:#e0e0e0;font-family:'Courier New',monospace;-webkit-tap-highlight-color:transparent;overflow:hidden}
+#wrap{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;max-width:480px;margin:0 auto;background:#060608}
+#hdr{flex-shrink:0;padding:12px 16px 10px;border-bottom:1px solid #0d1a0d;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:20px;font-weight:700;letter-spacing:4px;color:#00e676}
+.logo-sub{font-size:9px;color:#1a3a1a;letter-spacing:2px;margin-top:1px}
+.pill{display:flex;align-items:center;gap:5px;padding:4px 12px;border:1px solid #333;border-radius:20px;font-size:11px;letter-spacing:2px;color:#555;background:#0a0a0a}
+.dot{width:8px;height:8px;border-radius:50%;background:#333;flex-shrink:0;transition:all .5s}
+#main{flex:1;overflow-y:auto;min-height:0}
+.page{display:none;padding:14px 14px 20px}
+.page.on{display:block}
+#nav{flex-shrink:0;display:flex;border-top:2px solid #1a2a1a;background:#040704;min-height:56px}
+.tb{flex:1;padding:8px 0;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#2a4a2a;font-size:10px;letter-spacing:1px;font-family:'Courier New',monospace}
+.tb.on{color:#00e676}
+.ti{font-size:22px;line-height:1.2}
+.card{background:#0b0f0b;border:1px solid #1a261a;border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.cl{font-size:9px;color:#1e4a1e;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.bal{font-size:30px;font-weight:700;color:#fff;line-height:1.1}
+.balu{font-size:12px;color:#333;margin-left:4px}
+.srow{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
+.si .sl{font-size:10px;color:#2a4a2a;margin-bottom:2px}
+.si .sv{font-size:13px;font-weight:700}
+.sigbox{text-align:center;background:#050905;border:1px solid #0d1a0d;border-radius:12px;padding:14px;margin-bottom:12px}
+.sigv{font-size:22px;font-weight:700;min-height:30px;margin:6px 0;line-height:1.3}
+.sigsub{font-size:10px;color:#1e3a1e}
+.strat{background:#050905;border:1px solid #0d1a0d;border-radius:10px;padding:12px;margin-bottom:12px;font-size:11px;line-height:2;color:#2a5a2a}
+.btn{width:100%;padding:14px;border-radius:10px;border:1px solid;font-size:15px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-bottom:10px;font-family:'Courier New',monospace}
+.btn:disabled{opacity:.3}
+.bg{background:#001a08;border-color:#00e676;color:#00e676}
+.br{background:#1a0004;border-color:#ff1744;color:#ff1744}
+.by{background:#1a0e00;border-color:#ffd740;color:#ffd740}
+.warn{background:#0d0800;border:1px solid #2a1800;border-radius:8px;padding:10px 12px;font-size:11px;color:#5a4000;line-height:1.7;margin-bottom:10px}
+.fl{font-size:10px;color:#2a5a2a;letter-spacing:1px;text-transform:uppercase;margin:12px 0 5px}
+.iw{position:relative;margin-bottom:6px}
+input[type=password],input[type=text]{width:100%;background:#040904;border:1px solid #0d1a0d;border-radius:8px;padding:11px 40px 11px 12px;color:#00e676;font-size:13px;outline:none;font-family:'Courier New',monospace}
+.eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:17px}
+input.srch{width:100%;background:#040904;border:1px solid #0d1a0d;border-radius:8px;padding:11px 12px;color:#00e676;font-size:13px;outline:none;font-family:'Courier New',monospace;margin-bottom:10px}
+.slist{height:calc(100vh - 270px);overflow-y:auto}
+.sb{display:block;width:100%;text-align:left;padding:9px 12px;margin-bottom:3px;background:transparent;border:1px solid #0d1a0d;border-radius:6px;color:#3a6a3a;font-size:13px;cursor:pointer;font-family:'Courier New',monospace}
+.sb.on{background:#001a08;border-color:#00e676;color:#00e676;font-weight:700}
+.lbox{background:#040704;border:1px solid #0a140a;border-radius:10px;padding:12px;height:calc(100vh - 190px);overflow-y:auto}
+.ll{font-size:11px;margin-bottom:5px;line-height:1.6;word-break:break-all}
+.lts{color:#1e3a1e;margin-right:5px}
+.lvw{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.lb{padding:6px 12px;border-radius:6px;border:1px solid #1a2a1a;background:transparent;color:#3a5a3a;font-family:'Courier New',monospace;font-size:12px;cursor:pointer}
+.lb.on{background:#001a08;border-color:#00e676;color:#00e676;font-weight:700}
+.ibox{font-size:11px;color:#2a5a2a;line-height:1.9}
+.dbox{font-size:11px;color:#2a3a2a;line-height:1.8}
+/* 레버리지 입력 */
+.lev-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.lev-row input{width:80px;padding:8px 10px;background:#040904;border:1px solid #0d1a0d;border-radius:8px;color:#00e676;font-size:14px;outline:none;font-family:'Courier New',monospace;text-align:center}
+.lev-row span{font-size:12px;color:#3a6a3a}
+#flash{position:fixed;top:68px;left:10px;right:10px;max-width:460px;margin:0 auto;padding:10px 14px;border-radius:8px;border:1px solid;font-size:12px;z-index:99;display:none}
+/* 포지션 뱃지 */
+.pos-badge{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;letter-spacing:1px}
+.pos-long{background:#001a08;border:1px solid #00e676;color:#00e676}
+.pos-short{background:#1a0004;border:1px solid #ff1744;color:#ff1744}
+.pos-none{color:#555}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="hdr">
+    <div>
+      <div class="logo">HA·FUTURES</div>
+      <div class="logo-sub">Heikin-Ashi Futures Bot</div>
+    </div>
+    <div class="pill" id="pill">
+      <div class="dot" id="dot"></div>
+      <span id="stxt">IDLE</span>
+    </div>
+  </div>
+
+  <div id="flash"></div>
+
+  <div id="main">
+
+    <!-- 홈 -->
+    <div class="page on" id="p-home">
+      <div class="card">
+        <div class="cl">선물 잔고 (USDT)</div>
+        <div class="bal" id="balBig">$0.00<span class="balu">USDT</span></div>
+        <div class="srow">
+          <div class="si"><div class="sl">시작잔고</div><div class="sv" id="initB">$0.00</div></div>
+          <div class="si"><div class="sl">수익률</div><div class="sv" id="pnl" style="color:#555">—</div></div>
+          <div class="si"><div class="sl">포지션</div><div class="sv" id="posDisp"><span class="pos-none">없음</span></div></div>
+          <div class="si"><div class="sl">레버리지</div><div class="sv" id="levDisp" style="color:#ffd740">1x</div></div>
+        </div>
+      </div>
+
+      <div class="sigbox">
+        <div class="sigsub" id="symIntv">BTCUSDT / 10m</div>
+        <div class="sigv" id="sigv">—</div>
+        <div class="sigsub" id="sigt">마지막 체크: —</div>
+      </div>
+
+      <div class="strat">
+        <span style="color:#3a6a3a;font-weight:700">선물 전략 (10분봉)</span><br>
+        <span style="color:#00e676">롱 진입</span> HA양봉≥이전×2 + RSI＞Signal + 저가＞MA120<br>
+        <span style="color:#4fc3f7">롱 청산</span> HA음봉≥이전×1.5 + RSI＜Signal<br>
+        <span style="color:#ff1744">숏 진입</span> HA음봉≥이전×2 + RSI＜Signal<br>
+        <span style="color:#ff9800">숏 청산</span> HA양봉≥이전×1.5 + RSI＞Signal<br>
+        <span style="color:#ffd740">정지</span> 당일 -10% 초과 시 전량청산·정지
+      </div>
+
+      <div class="warn" id="nowarn">⚠ 설정 탭에서 API Key 입력 후 연결하세요.</div>
+      <button class="btn by" id="haltBtn" style="display:none" onclick="resetHalt()">🔓 손실정지 해제</button>
+      <button class="btn bg" id="startBtn" onclick="doStart()" disabled>▶ 자동매매 시작</button>
+      <button class="btn br" id="stopBtn" style="display:none" onclick="doStop()">⏹ 정지</button>
+    </div>
+
+    <!-- 종목 -->
+    <div class="page" id="p-market">
+      <div class="card" style="margin-bottom:10px">
+        <div class="cl">거래 종목 (선물)</div>
+        <div style="font-size:13px;color:#3a6a3a">선택됨: <span id="curSym" style="color:#00e676;font-weight:700">BTCUSDT</span></div>
+      </div>
+      <input class="srch" id="srch" placeholder="검색 (BTC, ETH, SOL...)" oninput="renderSym()">
+      <div class="slist" id="slist"><div style="color:#1a3a1a;text-align:center;padding-top:40px;font-size:12px">연결 후 표시됩니다</div></div>
+    </div>
+
+    <!-- 로그 -->
+    <div class="page" id="p-logs">
+      <div class="lbox" id="lbox"><div style="color:#1a3a1a;text-align:center;padding-top:60px;font-size:12px">로그 없음</div></div>
+    </div>
+
+    <!-- 설정 -->
+    <div class="page" id="p-settings">
+      <div class="card">
+        <div class="cl">바이낸스 선물 API</div>
+        <div id="cbadge" style="display:none;color:#00e676;font-size:12px;margin-bottom:8px">✓ 연결됨</div>
+        <div class="fl">API Key</div>
+        <div class="iw"><input type="password" id="apiKey" placeholder="Futures API Key 입력"><button class="eye" onclick="te('apiKey',this)">👁</button></div>
+        <div class="fl">API Secret</div>
+        <div class="iw"><input type="password" id="apiSec" placeholder="Futures API Secret 입력"><button class="eye" onclick="te('apiSec',this)">👁</button></div>
+        <button class="btn bg" style="margin-top:12px" id="connBtn" onclick="doConnect()">바이낸스 선물 연결</button>
+      </div>
+
+      <div class="card">
+        <div class="cl">레버리지 설정</div>
+        <div class="lev-row">
+          <input type="text" id="levInput" value="1" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <span>배 (1~125, 권장: 1~5)</span>
+        </div>
+        <div style="font-size:10px;color:#2a4a2a;margin-top:8px">⚠ 레버리지가 높을수록 손실 위험 증가</div>
+      </div>
+
+      <div class="card">
+        <div class="cl">전략 파라미터</div>
+        <div class="ibox">
+          캔들: 10분봉 고정<br>
+          RSI 기간: 14 | Signal: EMA(14)<br>
+          이동평균: MA(120)<br>
+          롱진입: HA양봉≥이전×2.0<br>
+          롱청산: HA음봉≥이전×1.5<br>
+          숏진입: HA음봉≥이전×2.0<br>
+          숏청산: HA양봉≥이전×1.5<br>
+          손실한도: -10% 자동정지<br>
+          주문: 시장가 전액
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cl">주의사항</div>
+        <div class="dbox">
+          ⚠ <span style="color:#ff1744">선물은 원금 손실 위험이 매우 큽니다</span><br>
+          · 레버리지 1~3배로 시작하세요<br>
+          · 출금 권한 절대 금지<br>
+          · 화면 꺼지면 매매 멈춤<br>
+          · 반드시 소액으로 테스트
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="nav">
+    <button class="tb on" id="tb-home" onclick="goTab('home')"><span class="ti">⬡</span>홈</button>
+    <button class="tb" id="tb-market" onclick="goTab('market')"><span class="ti">◈</span>종목</button>
+    <button class="tb" id="tb-logs" onclick="goTab('logs')"><span class="ti">≡</span>로그</button>
+    <button class="tb" id="tb-settings" onclick="goTab('settings')"><span class="ti">◉</span>설정</button>
+  </div>
+</div>
+
+<script>
+const S={
+  key:'',sec:'',
+  sym:localStorage.getItem('sym')||'BTCUSDT',
+  intv:'10m',
+  lev:1,
+  conn:false,run:false,halt:false,
+  pos:null, // null | 'LONG' | 'SHORT'
+  iBal:0,cBal:0,syms:[],tid:null
+};
+const B='https://fapi.binance.com'; // 선물 엔드포인트
+
+function goTab(t){
+  ['home','market','logs','settings'].forEach(x=>{
+    document.getElementById('p-'+x).classList.toggle('on',x===t);
+    document.getElementById('tb-'+x).classList.toggle('on',x===t);
+  });
+}
+
+// ── HMAC ──
+async function hmac(sec,msg){
+  const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(sec),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const s=await crypto.subtle.sign('HMAC',k,new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(s)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── API (선물) ──
+async function api(path,params={},signed=false,method='GET'){
+  let q=new URLSearchParams(params).toString();
+  if(signed){const ts=Date.now();q+=(q?'&':'')+'timestamp='+ts;q+='&signature='+await hmac(S.sec,q);}
+  if(method==='POST'){
+    const r=await fetch(B+path,{method:'POST',headers:{'X-MBX-APIKEY':S.key,'Content-Type':'application/x-www-form-urlencoded'},body:q});
+    const d=await r.json();if(!r.ok)throw new Error(d.msg||JSON.stringify(d));return d;
+  }
+  if(method==='DELETE'){
+    const r=await fetch(B+path+'?'+q,{method:'DELETE',headers:{'X-MBX-APIKEY':S.key}});
+    const d=await r.json();if(!r.ok)throw new Error(d.msg||JSON.stringify(d));return d;
+  }
+  const r=await fetch(B+path+(q?'?'+q:''),{headers:{'X-MBX-APIKEY':S.key}});
+  const d=await r.json();if(!r.ok)throw new Error(d.msg||JSON.stringify(d));return d;
+}
+
+// ── 지표 ──
+function haCalc(raw){
+  const h=[];
+  for(let i=0;i<raw.length;i++){
+    const{o,h:hi,l,c}=raw[i],hc=(o+hi+l+c)/4,ho=i===0?(o+c)/2:(h[i-1].o+h[i-1].c)/2;
+    h.push({o:ho,c:hc,h:Math.max(hi,ho,hc),l:Math.min(l,ho,hc),body:Math.abs(hc-ho),bull:hc>=ho});
+  }return h;
+}
+function rsiCalc(cl,p=14){
+  const r=new Array(cl.length).fill(null);let ag=0,al=0;
+  for(let i=1;i<=p;i++){const d=cl[i]-cl[i-1];d>0?ag+=d:al+=Math.abs(d);}
+  ag/=p;al/=p;r[p]=100-100/(1+ag/(al||1e-10));
+  for(let i=p+1;i<cl.length;i++){const d=cl[i]-cl[i-1];ag=(ag*(p-1)+(d>0?d:0))/p;al=(al*(p-1)+(d<0?Math.abs(d):0))/p;r[i]=100-100/(1+ag/(al||1e-10));}
+  return r;
+}
+function emaCalc(v,p){const k=2/(p+1),e=new Array(v.length).fill(null);let ok=false;for(let i=0;i<v.length;i++){if(v[i]===null)continue;if(!ok){e[i]=v[i];ok=true;continue;}e[i]=v[i]*k+e[i-1]*(1-k);}return e;}
+function maCalc(cl,p){return cl.map((_,i)=>i<p-1?null:cl.slice(i-p+1,i+1).reduce((a,b)=>a+b,0)/p);}
+
+function analyze(kl){
+  const raw=kl.map(k=>({o:+k[1],h:+k[2],l:+k[3],c:+k[4]}));
+  const cl=raw.map(r=>r.c),ha=haCalc(raw),rsi=rsiCalc(cl),sig=emaCalc(rsi,14),ma=maCalc(cl,120);
+  const i=ha.length-2,cur=ha[i],rv=rsi[i],sv=sig[i],mv=ma[i];
+  let pb=0,pr=0;
+  for(let j=i-1;j>=0;j--){if(ha[j].bull){pb=ha[j].body;break;}}
+  for(let j=i-1;j>=0;j--){if(!ha[j].bull){pr=ha[j].body;break;}}
+
+  // 롱 진입: HA양봉≥이전양봉×2 + RSI>Signal + 저가>MA120
+  const longEntry  = cur.bull  && pb>0 && cur.body>=pb*2  && rv>sv && cur.l>mv;
+  // 롱 청산: HA음봉≥이전음봉×1.5 + RSI<Signal
+  const longExit   = !cur.bull && pr>0 && cur.body>=pr*1.5 && rv<sv;
+  // 숏 진입: HA음봉≥이전음봉×2 + RSI<Signal
+  const shortEntry = !cur.bull && pr>0 && cur.body>=pr*2  && rv<sv;
+  // 숏 청산: HA양봉≥이전양봉×1.5 + RSI>Signal
+  const shortExit  = cur.bull  && pb>0 && cur.body>=pb*1.5 && rv>sv;
+
+  return{longEntry,longExit,shortEntry,shortExit,rv:rv?.toFixed(1),sv:sv?.toFixed(1),bull:cur.bull};
+}
+
+// ── 잔고 조회 (선물 USDT) ──
+async function getFuturesBalance(){
+  const d=await api('/fapi/v2/balance',{},true);
+  const usdt=d.find(b=>b.asset==='USDT');
+  return parseFloat(usdt?.availableBalance||0);
+}
+
+// ── 레버리지 설정 ──
+async function setLeverage(){
+  try{
+    await api('/fapi/v1/leverage',{symbol:S.sym,leverage:S.lev},true,'POST');
+    lg('레버리지 '+S.lev+'x 설정 완료','info');
+  }catch(e){lg('레버리지 설정 오류: '+e.message,'error');}
+}
+
+// ── 현재 포지션 조회 ──
+async function getCurrentPosition(){
+  const d=await api('/fapi/v2/positionRisk',{symbol:S.sym},true);
+  const p=d.find(x=>x.symbol===S.sym);
+  if(!p)return null;
+  const amt=parseFloat(p.positionAmt);
+  if(amt>0)return'LONG';
+  if(amt<0)return'SHORT';
+  return null;
+}
+
+// ── 시장가 주문 ──
+async function placeOrder(side,closePos=false){
+  // 잔고 조회 및 수량 계산
+  const bal=await getFuturesBalance();
+  const ticker=await api('/fapi/v1/ticker/price',{symbol:S.sym});
+  const price=parseFloat(ticker.price);
+
+  // 심볼 정보 (최소수량, stepSize)
+  const info=await api('/fapi/v1/exchangeInfo');
+  const symInfo=info.symbols.find(s=>s.symbol===S.sym);
+  const lot=symInfo.filters.find(f=>f.filterType==='LOT_SIZE');
+  const step=parseFloat(lot.stepSize);
+  const minQty=parseFloat(lot.minQty);
+
+  let qty;
+  if(closePos){
+    // 청산: 현재 보유 수량 전량
+    const pos=await api('/fapi/v2/positionRisk',{symbol:S.sym},true);
+    const p=pos.find(x=>x.symbol===S.sym);
+    qty=Math.abs(parseFloat(p?.positionAmt||0));
+  }else{
+    // 진입: 가용잔고 × 레버리지 × 0.99 (수수료 여유)
+    qty=Math.floor((bal*S.lev*0.99/price)/step)*step;
+  }
+  qty=parseFloat(qty.toFixed(8));
+  if(qty<minQty)throw new Error('수량 미달: '+qty+' (최소 '+minQty+')');
+
+  const params={
+    symbol:S.sym,
+    side,
+    type:'MARKET',
+    quantity:qty,
+    ...(closePos?{reduceOnly:'true'}:{})
+  };
+  const ts=Date.now();
+  let q=new URLSearchParams(params).toString()+'&timestamp='+ts;
+  q+='&signature='+await hmac(S.sec,q);
+  const r=await fetch(B+'/fapi/v1/order',{method:'POST',headers:{'X-MBX-APIKEY':S.key,'Content-Type':'application/x-www-form-urlencoded'},body:q});
+  const d=await r.json();
+  if(!r.ok)throw new Error(d.msg||'주문 실패');
+  return{orderId:d.orderId,qty,price};
+}
+
+// ── 사이클 ──
+async function cycle(){
+  if(!S.run||S.halt)return;
+  try{
+    // 잔고 체크
+    const bal=await getFuturesBalance();S.cBal=bal;
+    if(S.iBal>0){
+      const pnl=(bal-S.iBal)/S.iBal*100;
+      if(pnl<=-10){
+        lg('일일 손실 한도 초과('+pnl.toFixed(2)+'%) → 자동 정지','stop');
+        if(S.pos==='LONG'){try{await placeOrder('SELL',true);lg('롱 청산 완료','info');S.pos=null;}catch(e){lg('청산 오류:'+e.message,'error');}}
+        if(S.pos==='SHORT'){try{await placeOrder('BUY',true);lg('숏 청산 완료','info');S.pos=null;}catch(e){lg('청산 오류:'+e.message,'error');}}
+        S.halt=true;S.run=false;clearInterval(S.tid);ui();return;
+      }
+    }
+
+    // 포지션 현황 동기화
+    S.pos=await getCurrentPosition();
+
+    // 캔들 분석
+    const kl=await api('/fapi/v1/klines',{symbol:S.sym,interval:S.intv,limit:200});
+    const res=analyze(kl);
+    const now=new Date().toLocaleTimeString('ko-KR');
+    document.getElementById('sigt').textContent='마지막 체크: '+now;
+
+    let sigTxt='⏳ 대기중';
+    if(res.longEntry&&!S.pos) sigTxt='🟢 롱 진입 신호';
+    else if(res.longExit&&S.pos==='LONG') sigTxt='🔵 롱 청산 신호';
+    else if(res.shortEntry&&!S.pos) sigTxt='🔴 숏 진입 신호';
+    else if(res.shortExit&&S.pos==='SHORT') sigTxt='🟠 숏 청산 신호';
+    else if(S.pos==='LONG') sigTxt='📈 롱 보유중';
+    else if(S.pos==='SHORT') sigTxt='📉 숏 보유중';
+    document.getElementById('sigv').textContent=sigTxt;
+
+    lg('['+S.sym+'] '+(res.bull?'양봉':'음봉')+' RSI:'+res.rv+' Sig:'+res.sv+' pos:'+(S.pos||'없음'),'info');
+
+    // ── 롱 진입 ──
+    if(res.longEntry&&!S.pos){
+      lg('🟢 롱 진입 → 시장가 매수','buy');
+      try{
+        await setLeverage();
+        const r=await placeOrder('BUY');
+        lg('✅ 롱 진입 완료 | qty:'+r.qty+' @ $'+r.price,'buy');
+        S.pos='LONG';
+      }catch(e){lg('롱 진입 실패: '+e.message,'error');}
+    }
+    // ── 롱 청산 ──
+    else if(res.longExit&&S.pos==='LONG'){
+      lg('🔵 롱 청산 → 시장가 매도','sell');
+      try{
+        const r=await placeOrder('SELL',true);
+        lg('✅ 롱 청산 완료 | qty:'+r.qty,'sell');
+        S.pos=null;
+      }catch(e){lg('롱 청산 실패: '+e.message,'error');}
+    }
+    // ── 숏 진입 ──
+    else if(res.shortEntry&&!S.pos){
+      lg('🔴 숏 진입 → 시장가 매도','sell');
+      try{
+        await setLeverage();
+        const r=await placeOrder('SELL');
+        lg('✅ 숏 진입 완료 | qty:'+r.qty+' @ $'+r.price,'sell');
+        S.pos='SHORT';
+      }catch(e){lg('숏 진입 실패: '+e.message,'error');}
+    }
+    // ── 숏 청산 ──
+    else if(res.shortExit&&S.pos==='SHORT'){
+      lg('🟠 숏 청산 → 시장가 매수','buy');
+      try{
+        const r=await placeOrder('BUY',true);
+        lg('✅ 숏 청산 완료 | qty:'+r.qty,'buy');
+        S.pos=null;
+      }catch(e){lg('숏 청산 실패: '+e.message,'error');}
+    }
+
+    ui();
+  }catch(e){lg('오류: '+e.message,'error');}
+}
+
+// ── 연결 ──
+async function doConnect(){
+  const k=document.getElementById('apiKey').value.trim(),s=document.getElementById('apiSec').value.trim();
+  if(!k||!s){flash('API Key와 Secret을 입력하세요.','err');return;}
+  S.key=k;S.sec=s;
+  const btn=document.getElementById('connBtn');btn.textContent='연결 중…';btn.disabled=true;
+  try{
+    await fetch('https://fapi.binance.com/fapi/v1/ping');
+    const bal=await getFuturesBalance();
+    S.cBal=bal;S.conn=true;
+    flash('선물 연결 성공! USDT: $'+bal.toFixed(2),'ok');
+    lg('바이낸스 선물 연결 완료 — 가용잔고: $'+bal.toFixed(2),'start');
+    document.getElementById('nowarn').style.display='none';
+    document.getElementById('startBtn').disabled=false;
+    document.getElementById('cbadge').style.display='block';
+    document.getElementById('balBig').innerHTML='$'+bal.toFixed(2)+'<span class="balu">USDT</span>';
+    btn.textContent='✓ 연결됨';btn.className='btn by';
+    loadSyms();
+  }catch(e){flash('연결 실패: '+e.message,'err');btn.textContent='바이낸스 선물 연결';btn.className='btn bg';}
+  btn.disabled=false;
+}
+
+// ── 시작 ──
+async function doStart(){
+  if(!S.conn){flash('먼저 연결하세요.','err');return;}
+  if(S.run)return;
+  S.lev=parseInt(document.getElementById('levInput').value)||1;
+  if(S.lev<1||S.lev>125){flash('레버리지는 1~125 사이로 입력하세요.','err');return;}
+  S.iBal=await getFuturesBalance();S.cBal=S.iBal;
+  S.run=true;S.halt=false;S.pos=null;
+  document.getElementById('lbox').innerHTML='';
+  lg('봇 시작 — '+S.sym+' 10분봉 | 레버리지 '+S.lev+'x | 시작잔고 $'+S.iBal.toFixed(2),'start');
+  ui();await cycle();
+  S.tid=setInterval(cycle,600000); // 10분
+}
+
+function doStop(){S.run=false;clearInterval(S.tid);lg('봇 수동 정지','stop');ui();}
+function resetHalt(){S.halt=false;flash('정지 해제됨. 다시 시작하세요.','ok');ui();}
+
+// ── 심볼 ──
+async function loadSyms(){
+  try{
+    const info=await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo').then(r=>r.json());
+    S.syms=info.symbols.filter(s=>s.quoteAsset==='USDT'&&s.status==='TRADING').map(s=>s.symbol).sort();
+    renderSym();
+  }catch(e){lg('심볼 로드 실패','error');}
+}
+function renderSym(){
+  const q=(document.getElementById('srch').value||'').toUpperCase();
+  const list=S.syms.filter(s=>!q||s.includes(q));
+  const el=document.getElementById('slist');
+  if(!list.length){el.innerHTML='<div style="color:#1a3a1a;text-align:center;padding-top:30px;font-size:12px">없음</div>';return;}
+  el.innerHTML=list.map(s=>`<button class="sb${s===S.sym?' on':''}" onclick="pickSym('${s}')">${s}${s===S.sym?' ✓':''}</button>`).join('');
+}
+function pickSym(s){
+  S.sym=s;localStorage.setItem('sym',s);
+  document.getElementById('curSym').textContent=s;
+  document.getElementById('symIntv').textContent=s+' / 10m';
+  renderSym();flash(s+' 선택됨','ok');
+}
+
+// ── UI 갱신 ──
+function ui(){
+  const{run,halt,pos,cBal,iBal,lev}=S;
+  const pill=document.getElementById('pill'),dot=document.getElementById('dot'),stxt=document.getElementById('stxt');
+  if(halt){pill.style.cssText='display:flex;align-items:center;gap:5px;padding:4px 12px;border:1px solid #ff1744;border-radius:20px;font-size:11px;letter-spacing:2px;color:#ff1744;background:#1a0000';dot.style.cssText='width:8px;height:8px;border-radius:50%;background:#ff1744;flex-shrink:0';stxt.textContent='HALT';}
+  else if(run){pill.style.cssText='display:flex;align-items:center;gap:5px;padding:4px 12px;border:1px solid #00e676;border-radius:20px;font-size:11px;letter-spacing:2px;color:#00e676;background:#001a08';dot.style.cssText='width:8px;height:8px;border-radius:50%;background:#00e676;box-shadow:0 0 8px #00e676;flex-shrink:0';stxt.textContent='LIVE';}
+  else{pill.style.cssText='display:flex;align-items:center;gap:5px;padding:4px 12px;border:1px solid #333;border-radius:20px;font-size:11px;letter-spacing:2px;color:#555;background:#0a0a0a';dot.style.cssText='width:8px;height:8px;border-radius:50%;background:#333;flex-shrink:0';stxt.textContent='IDLE';}
+
+  document.getElementById('balBig').innerHTML='$'+cBal.toFixed(2)+'<span class="balu">USDT</span>';
+  document.getElementById('initB').textContent='$'+iBal.toFixed(2);
+  const pnlPct=iBal>0?(cBal-iBal)/iBal*100:0;
+  const pe=document.getElementById('pnl');pe.textContent=iBal>0?(pnlPct>=0?'+':'')+pnlPct.toFixed(2)+'%':'—';pe.style.color=pnlPct>=0?'#00e676':'#ff1744';
+  document.getElementById('levDisp').textContent=lev+'x';
+
+  const pd=document.getElementById('posDisp');
+  if(pos==='LONG') pd.innerHTML='<span class="pos-badge pos-long">LONG</span>';
+  else if(pos==='SHORT') pd.innerHTML='<span class="pos-badge pos-short">SHORT</span>';
+  else pd.innerHTML='<span class="pos-none">없음</span>';
+
+  document.getElementById('startBtn').style.display=run?'none':'block';
+  document.getElementById('stopBtn').style.display=run?'block':'none';
+  document.getElementById('haltBtn').style.display=halt?'block':'none';
+}
+
+// ── 로그 ──
+const LC={buy:'#00e676',sell:'#ff1744',stop:'#ffd740',error:'#ff6b6b',start:'#00bcd4',info:'#2a5a2a'};
+const LI={buy:'🟢',sell:'🔴',stop:'🛑',error:'✖',start:'🚀',info:'▸'};
+function lg(msg,type='info'){
+  const b=document.getElementById('lbox');
+  if(b.querySelector('div[style]'))b.innerHTML='';
+  const d=document.createElement('div');d.className='ll';d.style.color=LC[type]||'#2a5a2a';
+  d.innerHTML=`<span class="lts">${new Date().toLocaleTimeString('ko-KR')}</span>${LI[type]||'▸'} ${msg}`;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+  while(b.children.length>100)b.removeChild(b.firstChild);
+}
+function flash(msg,type='ok'){
+  const el=document.getElementById('flash');el.textContent=msg;
+  el.style.cssText=`display:block;padding:10px 14px;border-radius:8px;border:1px solid;font-size:12px;z-index:99;position:fixed;top:68px;left:10px;right:10px;background:${type==='err'?'#1a0006':'#001a08'};border-color:${type==='err'?'#ff1744':'#00e676'};color:${type==='err'?'#ff1744':'#00e676'}`;
+  setTimeout(()=>el.style.display='none',3000);
+}
+function te(id,btn){const el=document.getElementById(id);el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'👁':'🙈';}
+
+(function(){
+  document.getElementById('symIntv').textContent=S.sym+' / 10m';
+  document.getElementById('curSym').textContent=S.sym;
+})();
+</script>
+</body>
+</html>
